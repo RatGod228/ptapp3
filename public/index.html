@@ -1,0 +1,1715 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProfitTrack - Учет закупок и продаж</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root {
+      --bg-primary: #f9fafb;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --text-primary: #111827;
+      --text-secondary: #6b7280;
+      --border-color: #e5e7eb;
+      --input-bg: #ffffff;
+      --input-border: #d1d5db;
+      --shadow: rgba(0,0,0,0.1);
+      --gradient-start: #667eea;
+      --gradient-end: #764ba2;
+    }
+    
+    [data-theme="dark"] {
+      --bg-primary: #111827;
+      --bg-secondary: #1f2937;
+      --bg-card: #374151;
+      --text-primary: #f9fafb;
+      --text-secondary: #9ca3af;
+      --border-color: #4b5563;
+      --input-bg: #374151;
+      --input-border: #4b5563;
+      --shadow: rgba(0,0,0,0.3);
+      --gradient-start: #4c51bf;
+      --gradient-end: #7c3aed;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); transition: background 0.3s, color 0.3s; }
+    
+    /* Landing Page */
+    .landing-page { min-height: 100vh; }
+    .landing-hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 80px 24px; text-align: center; }
+    .landing-hero h1 { font-size: 48px; margin-bottom: 16px; }
+    .landing-hero p { font-size: 20px; opacity: 0.9; max-width: 600px; margin: 0 auto 32px; }
+    .landing-stats { display: flex; justify-content: center; gap: 48px; flex-wrap: wrap; margin-top: 48px; }
+    .landing-stat { text-align: center; }
+    .landing-stat-value { font-size: 36px; font-weight: bold; }
+    .landing-stat-label { font-size: 14px; opacity: 0.8; }
+    .landing-btn { padding: 16px 32px; background: white; color: #667eea; border: none; border-radius: 8px; font-size: 18px; font-weight: 600; cursor: pointer; margin: 8px; }
+    .landing-btn-outline { background: transparent; color: white; border: 2px solid white; }
+    
+    .landing-section { padding: 64px 24px; max-width: 1200px; margin: 0 auto; }
+    .landing-section h2 { text-align: center; font-size: 32px; margin-bottom: 48px; color: var(--text-primary); }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+    .feature-card { background: var(--bg-card); padding: 32px; border-radius: 12px; box-shadow: 0 4px 6px var(--shadow); text-align: center; }
+    .feature-icon { font-size: 48px; margin-bottom: 16px; }
+    .feature-card h3 { font-size: 20px; margin-bottom: 12px; color: var(--text-primary); }
+    .feature-card p { color: var(--text-secondary); line-height: 1.6; }
+    
+    .screenshots-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+    .screenshot-card { background: var(--bg-card); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px var(--shadow); }
+    .screenshot-img { width: 100%; height: 200px; background: linear-gradient(135deg, #10b981, #3b82f6); display: flex; align-items: center; justify-content: center; font-size: 64px; }
+    .screenshot-content { padding: 20px; }
+    .screenshot-content h3 { font-size: 18px; margin-bottom: 8px; color: var(--text-primary); }
+    .screenshot-content p { color: var(--text-secondary); font-size: 14px; }
+    
+    .reviews-section { background: var(--bg-secondary); }
+    .reviews-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+    .review-card { background: var(--bg-card); padding: 24px; border-radius: 12px; box-shadow: 0 2px 4px var(--shadow); }
+    .review-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .review-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #10b981, #3b82f6); display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: bold; }
+    .review-info h4 { color: var(--text-primary); margin-bottom: 4px; }
+    .review-stars { color: #fbbf24; }
+    .review-text { color: var(--text-secondary); line-height: 1.6; }
+    .review-form { background: var(--bg-card); padding: 24px; border-radius: 12px; max-width: 500px; margin: 32px auto 0; }
+    .review-form h3 { margin-bottom: 16px; color: var(--text-primary); }
+    .star-rating { display: flex; gap: 8px; margin-bottom: 16px; }
+    .star-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #d1d5db; }
+    .star-btn.active { color: #fbbf24; }
+    
+    .landing-footer { background: #1f2937; color: white; padding: 48px 24px; text-align: center; }
+    .landing-footer p { opacity: 0.7; }
+    
+    /* Auth Screen */
+    .auth-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%); padding: 24px; }
+    .auth-card { max-width: 420px; width: 100%; background: var(--bg-card); border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden; }
+    .auth-header { background: linear-gradient(135deg, #10b981, #3b82f6); padding: 32px; text-align: center; color: white; }
+    .auth-header h1 { font-size: 24px; font-weight: bold; margin-bottom: 12px; }
+    .auth-header p { font-size: 14px; opacity: 0.9; line-height: 1.6; }
+    .auth-form { padding: 32px; }
+    .auth-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+    .auth-tab { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; background: var(--bg-primary); color: var(--text-primary); }
+    .auth-tab.active { background: #3b82f6; color: white; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: var(--text-primary); }
+    .form-group label .required { color: #dc2626; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 16px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 14px; background: var(--input-bg); color: var(--text-primary); }
+    .auth-error { background: #fee2e2; color: #dc2626; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+    .auth-success { background: #d1fae5; color: #059669; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+    .auth-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #10b981, #3b82f6); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+    .forgot-password { text-align: center; margin-top: 16px; }
+    .forgot-password button { background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 14px; }
+    .back-to-login { text-align: center; margin-top: 16px; }
+    .back-to-login button { background: none; border: none; color: #6b7280; cursor: pointer; font-size: 14px; }
+    
+    /* App Header */
+    .app-header { background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); box-shadow: 0 1px 2px var(--shadow); position: sticky; top: 0; z-index: 100; }
+    .app-header-content { max-width: 1280px; margin: 0 auto; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .menu-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-primary); padding: 8px; border-radius: 8px; transition: background 0.2s; }
+    .menu-btn:hover { background: var(--bg-primary); }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-icon { background: linear-gradient(135deg, #10b981, #3b82f6); padding: 8px; border-radius: 8px; font-size: 24px; }
+    .logo-text h1 { font-size: 20px; font-weight: bold; color: var(--text-primary); }
+    .logo-text p { font-size: 14px; color: var(--text-secondary); }
+    .user-info { display: flex; align-items: center; gap: 12px; }
+    .logout-btn { padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+    
+    /* Sidebar */
+    .sidebar-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; }
+    .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 300px; background: var(--bg-secondary); border-right: 1px solid var(--border-color); z-index: 201; padding: 24px; overflow-y: auto; transform: translateX(-100%); transition: transform 0.3s ease; }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); }
+    .sidebar-header h2 { font-size: 20px; color: var(--text-primary); }
+    .close-sidebar { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary); }
+    .sidebar-menu { display: flex; flex-direction: column; gap: 8px; }
+    .sidebar-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; cursor: pointer; transition: background 0.2s; color: var(--text-primary); background: none; border: none; width: 100%; text-align: left; font-size: 16px; }
+    .sidebar-item:hover { background: var(--bg-primary); }
+    .sidebar-item.active { background: #3b82f6; color: white; }
+    .sidebar-divider { height: 1px; background: var(--border-color); margin: 16px 0; }
+    .theme-toggle { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
+    .theme-toggle span { color: var(--text-primary); }
+    .toggle-switch { position: relative; width: 50px; height: 26px; background: #6b7280; border-radius: 13px; cursor: pointer; transition: background 0.3s; }
+    .toggle-switch.active { background: #3b82f6; }
+    .toggle-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: transform 0.3s; }
+    .toggle-switch.active::after { transform: translateX(24px); }
+    
+    /* Modal */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 300; padding: 24px; }
+    .modal-content { background: var(--bg-card); border-radius: 16px; padding: 32px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .modal-header h2 { font-size: 24px; color: var(--text-primary); }
+    .close-modal { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary); }
+    .profile-section { margin-bottom: 24px; }
+    .profile-section h3 { font-size: 16px; color: var(--text-secondary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .profile-info { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+    .profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #10b981, #3b82f6); display: flex; align-items: center; justify-content: center; font-size: 28px; color: white; }
+    .profile-details h4 { font-size: 18px; color: var(--text-primary); margin-bottom: 4px; }
+    .profile-details p { font-size: 14px; color: var(--text-secondary); }
+    .success-message { background: #d1fae5; color: #059669; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+    .info-box { background: #dbeafe; color: #1e40af; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+    
+    /* Main Content */
+    .main-content { max-width: 1280px; margin: 0 auto; padding: 24px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg-card); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center; border: 2px solid transparent; }
+    .stat-card.purchases { border-color: #a7f3d0; }
+    .stat-card.sales { border-color: #bfdbfe; }
+    .stat-card.revenue { border-color: #ddd6fe; }
+    .stat-card.profit { border-color: #a7f3d0; }
+    .stat-card.profit.negative { border-color: #fecaca; }
+    .stat-label { font-size: 14px; color: var(--text-secondary); margin-bottom: 4px; }
+    .stat-value { font-size: 24px; font-weight: bold; }
+    .stat-value.purchases { color: #059669; }
+    .stat-value.sales { color: #2563eb; }
+    .stat-value.revenue { color: #7c3aed; }
+    .stat-value.profit { color: #059669; }
+    .stat-value.profit.negative { color: #dc2626; }
+    .stat-icon { padding: 12px; border-radius: 8px; font-size: 24px; }
+    .stat-icon.purchases { background: #d1fae5; }
+    .stat-icon.sales { background: #dbeafe; }
+    .stat-icon.revenue { background: #ede9fe; }
+    .stat-icon.profit { background: #d1fae5; }
+    .stat-icon.profit.negative { background: #fee2e2; }
+    
+    .tabs { display: flex; background: var(--bg-card); border-radius: 8px; box-shadow: 0 1px 3px var(--shadow); margin-bottom: 24px; }
+    .tab { flex: 1; padding: 12px 24px; border: none; background: transparent; cursor: pointer; font-weight: 500; color: var(--text-secondary); }
+    .tab.active { background: var(--bg-primary); border-bottom: 2px solid #3b82f6; font-weight: 600; color: var(--text-primary); }
+    .tab-content { background: var(--bg-card); border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px var(--shadow); }
+    
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+    .form-card { border-radius: 8px; padding: 20px; background: var(--bg-card); }
+    .form-card.purchase { border: 2px solid #10b981; border-left: 6px solid #10b981; }
+    .form-card.sale { border: 2px solid #3b82f6; border-left: 6px solid #3b82f6; }
+    .form-card h3 { margin-bottom: 16px; display: flex; align-items: center; gap: 8px; color: var(--text-primary); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .btn { padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .btn-primary { background: #059669; color: white; }
+    .btn-secondary { background: #2563eb; color: white; }
+    .btn:disabled { background: #9ca3af; cursor: not-allowed; }
+    .summary-box { background: #d1fae5; padding: 12px; border-radius: 6px; margin-top: 12px; }
+    .summary-box.negative { background: #fee2e2; }
+    
+    .table-container { overflow-x: auto; max-height: 400px; overflow-y: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid var(--border-color); color: var(--text-primary); }
+    th { position: sticky; top: 0; background: var(--bg-card); }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+    .badge-success { background: #059669; color: white; }
+    .badge-danger { background: #dc2626; color: white; }
+    .badge-info { background: #d1fae5; color: #059669; }
+    .badge-warning { background: #fee2e2; color: #dc2626; }
+    .product-img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 1px solid var(--border-color); }
+    .product-placeholder { width: 40px; height: 40px; background: var(--bg-primary); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .sell-btn { padding: 4px 10px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    .delete-btn { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 16px; }
+    .edit-btn { padding: 2px 6px; background: #3b82f6; color: white; border: none; border-radius: 3px; font-size: 10px; cursor: pointer; }
+    .notes-box { font-size: 11px; color: #8b5cf6; margin-top: 4px; font-style: italic; }
+    .notes-input { margin-top: 8px; padding: 8px; background: var(--bg-primary); border-radius: 4px; }
+    
+    .branch-selector { background: var(--bg-card); border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px var(--shadow); }
+    .branch-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .branch-select { padding: 8px 12px; border: 1px solid var(--input-border); border-radius: 6px; font-size: 14px; min-width: 200px; background: var(--input-bg); color: var(--text-primary); }
+    .btn-small { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+    
+    .loading { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg-primary); text-align: center; }
+    .loading-icon { font-size: 48px; margin-bottom: 16px; }
+    
+    .preview-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 400; padding: 24px; }
+    .preview-modal img { max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 8px; }
+    .modal-close-btn { position: absolute; top: 16px; right: 16px; background: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const PURCHASES_KEY = 'purchases';
+    const SALES_KEY = 'sales';
+    const BRANCHES_KEY = 'branches';
+    const CURRENT_BRANCH_KEY = 'currentBranch';
+    const USER_KEY = 'user';
+    const THEME_KEY = 'theme';
+    const REVIEWS_KEY = 'reviews';
+
+    // Fake reviews data
+    const FAKE_REVIEWS = [
+      { id: 1, name: 'Александр К.', rating: 5, text: 'Отличное приложение! Теперь всегда знаю свою прибыль. Очень удобно отслеживать остатки товаров.', date: '2024-01-15' },
+      { id: 2, name: 'Мария С.', rating: 5, text: 'Пользуюсь уже полгода. Все работает стабильно, интерфейс интуитивный. Рекомендую!', date: '2024-02-03' },
+      { id: 3, name: 'Дмитрий В.', rating: 4, text: 'Хороший инструмент для малого бизнеса. Нравится возможность добавлять фото товаров.', date: '2024-02-20' },
+      { id: 4, name: 'Елена П.', rating: 5, text: 'Самое удобное приложение для учета! Пробовала много других, но остановилась на этом.', date: '2024-03-08' },
+      { id: 5, name: 'Игорь М.', rating: 5, text: 'Темная тема - это то, что мне было нужно. Спасибо разработчикам!', date: '2024-03-25' },
+      { id: 6, name: 'Анна Л.', rating: 4, text: 'Удобно вести несколько веток для разных категорий товаров. Очень полезная функция.', date: '2024-04-12' },
+    ];
+
+    function App() {
+      // Theme
+      const [theme, setTheme] = useState('light');
+      
+      // Auth states
+      const [isAuthenticated, setIsAuthenticated] = useState(false);
+      const [user, setUser] = useState(null);
+      const [authMode, setAuthMode] = useState('login');
+      const [loginInput, setLoginInput] = useState('');
+      const [passwordInput, setPasswordInput] = useState('');
+      const [userName, setUserName] = useState('');
+      const [emailInput, setEmailInput] = useState('');
+      const [authError, setAuthError] = useState('');
+      const [authSuccess, setAuthSuccess] = useState('');
+      
+      // Forgot password
+      const [showForgotPassword, setShowForgotPassword] = useState(false);
+      const [resetEmail, setResetEmail] = useState('');
+      const [resetCode, setResetCode] = useState('');
+      const [newResetPassword, setNewResetPassword] = useState('');
+      const [resetStep, setResetStep] = useState(1);
+
+      // Sidebar & Profile
+      const [sidebarOpen, setSidebarOpen] = useState(false);
+      const [showProfile, setShowProfile] = useState(false);
+      const [showChangePassword, setShowChangePassword] = useState(false);
+      const [currentPassword, setCurrentPassword] = useState('');
+      const [newPassword, setNewPassword] = useState('');
+      const [confirmPassword, setConfirmPassword] = useState('');
+      const [passwordSuccess, setPasswordSuccess] = useState('');
+      const [passwordError, setPasswordError] = useState('');
+
+      const [purchases, setPurchases] = useState([]);
+      const [sales, setSales] = useState([]);
+      const [branches, setBranches] = useState([]);
+      const [currentBranchId, setCurrentBranchId] = useState('');
+      const [loaded, setLoaded] = useState(false);
+      const [activeTab, setActiveTab] = useState('add');
+
+      const [newBranchName, setNewBranchName] = useState('');
+      const [showNewBranchForm, setShowNewBranchForm] = useState(false);
+
+      const [purchaseName, setPurchaseName] = useState('');
+      const [purchaseQty, setPurchaseQty] = useState('1');
+      const [purchasePrice, setPurchasePrice] = useState('');
+      const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0]);
+      const [purchasePhoto, setPurchasePhoto] = useState('');
+      const [purchaseNotes, setPurchaseNotes] = useState('');
+
+      const [saleProduct, setSaleProduct] = useState('');
+      const [saleQty, setSaleQty] = useState('1');
+      const [salePurchasePrice, setSalePurchasePrice] = useState('');
+      const [salePrice, setSalePrice] = useState('');
+      const [saleDate, setSaleDate] = useState(new Date().toISOString().split('T')[0]);
+      const [saleNotes, setSaleNotes] = useState('');
+
+      const [quickSaleProduct, setQuickSaleProduct] = useState('');
+      const [quickSalePhoto, setQuickSalePhoto] = useState('');
+      const [quickSalePurchasePrice, setQuickSalePurchasePrice] = useState('');
+      const [showQuickSale, setShowQuickSale] = useState(false);
+
+      const [editingPurchaseId, setEditingPurchaseId] = useState('');
+      const [editingSaleId, setEditingSaleId] = useState('');
+      const [editNotes, setEditNotes] = useState('');
+
+      const [previewPhoto, setPreviewPhoto] = useState('');
+      const [showPreview, setShowPreview] = useState(false);
+      
+      // Landing page & Reviews
+      const [showLanding, setShowLanding] = useState(true);
+      const [reviews, setReviews] = useState([]);
+      const [newReviewRating, setNewReviewRating] = useState(0);
+      const [newReviewText, setNewReviewText] = useState('');
+      const [showReviewForm, setShowReviewForm] = useState(false);
+
+      // Load theme
+      useEffect(() => {
+        const savedTheme = localStorage.getItem(THEME_KEY);
+        if (savedTheme) {
+          setTheme(savedTheme);
+          document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+      }, []);
+
+      // Load user on mount
+      useEffect(() => {
+        const savedUser = localStorage.getItem(USER_KEY);
+        if (savedUser) {
+          try {
+            const parsedUser = JSON.parse(savedUser);
+            setUser(parsedUser);
+            setIsAuthenticated(true);
+            setShowLanding(false);
+          } catch (e) {
+            console.error('User load error:', e);
+          }
+        }
+        
+        // Load reviews
+        const savedReviews = localStorage.getItem(REVIEWS_KEY);
+        if (savedReviews) {
+          setReviews(JSON.parse(savedReviews));
+        } else {
+          setReviews(FAKE_REVIEWS);
+        }
+      }, []);
+
+      useEffect(() => {
+        if (!isAuthenticated) return;
+        try {
+          const savedPurchases = localStorage.getItem(PURCHASES_KEY);
+          const savedSales = localStorage.getItem(SALES_KEY);
+          const savedBranches = localStorage.getItem(BRANCHES_KEY);
+          const savedCurrentBranch = localStorage.getItem(CURRENT_BRANCH_KEY);
+          
+          if (savedPurchases) {
+            const parsed = JSON.parse(savedPurchases);
+            setPurchases(parsed.map(p => ({ ...p, remainingQty: p.remainingQty ?? p.quantity })));
+          }
+          if (savedSales) setSales(JSON.parse(savedSales));
+          if (savedBranches) {
+            setBranches(JSON.parse(savedBranches));
+          } else {
+            const defaultBranch = { id: 'default', name: 'Основная ветка', createdAt: new Date().toISOString() };
+            setBranches([defaultBranch]);
+            setCurrentBranchId('default');
+          }
+          if (savedCurrentBranch) setCurrentBranchId(savedCurrentBranch);
+        } catch (e) {
+          console.error('Load error:', e);
+        }
+        setLoaded(true);
+      }, [isAuthenticated]);
+
+      useEffect(() => {
+        if (loaded) localStorage.setItem(PURCHASES_KEY, JSON.stringify(purchases));
+      }, [purchases, loaded]);
+
+      useEffect(() => {
+        if (loaded) localStorage.setItem(SALES_KEY, JSON.stringify(sales));
+      }, [sales, loaded]);
+
+      useEffect(() => {
+        if (loaded) localStorage.setItem(BRANCHES_KEY, JSON.stringify(branches));
+      }, [branches, loaded]);
+
+      useEffect(() => {
+        if (loaded && currentBranchId) localStorage.setItem(CURRENT_BRANCH_KEY, currentBranchId);
+      }, [currentBranchId, loaded]);
+
+      useEffect(() => {
+        localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews));
+      }, [reviews]);
+
+      const toggleTheme = () => {
+        const newTheme = theme === 'light' ? 'dark' : 'light';
+        setTheme(newTheme);
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem(THEME_KEY, newTheme);
+      };
+
+      const handleLogin = () => {
+        setAuthError('');
+        if (!loginInput.trim() || !passwordInput.trim()) {
+          setAuthError('Введите логин и пароль');
+          return;
+        }
+        const savedUser = localStorage.getItem(USER_KEY);
+        if (!savedUser) {
+          setAuthError('Пользователь не найден. Зарегистрируйтесь');
+          return;
+        }
+        try {
+          const parsedUser = JSON.parse(savedUser);
+          if (parsedUser.login === loginInput.trim() && parsedUser.password === passwordInput.trim()) {
+            setUser(parsedUser);
+            setIsAuthenticated(true);
+            setShowLanding(false);
+            setLoginInput('');
+            setPasswordInput('');
+          } else {
+            setAuthError('Неверный логин или пароль');
+          }
+        } catch (e) {
+          setAuthError('Ошибка авторизации');
+        }
+      };
+
+      const handleRegister = () => {
+        setAuthError('');
+        if (!loginInput.trim() || !passwordInput.trim() || !userName.trim()) {
+          setAuthError('Введите имя, логин и пароль');
+          return;
+        }
+        if (!emailInput.trim()) {
+          setAuthError('Email обязателен для восстановления пароля');
+          return;
+        }
+        const savedUser = localStorage.getItem(USER_KEY);
+        if (savedUser) {
+          try {
+            const parsedUser = JSON.parse(savedUser);
+            if (parsedUser.login === loginInput.trim()) {
+              setAuthError('Пользователь с таким логином уже существует');
+              return;
+            }
+          } catch (e) {}
+        }
+        const newUser = { 
+          name: userName.trim(), 
+          login: loginInput.trim(), 
+          password: passwordInput.trim(),
+          email: emailInput.trim()
+        };
+        localStorage.setItem(USER_KEY, JSON.stringify(newUser));
+        setUser(newUser);
+        setIsAuthenticated(true);
+        setShowLanding(false);
+        setLoginInput('');
+        setPasswordInput('');
+        setUserName('');
+        setEmailInput('');
+      };
+
+      const handleForgotPassword = () => {
+        setAuthError('');
+        setAuthSuccess('');
+        if (!resetEmail.trim()) {
+          setAuthError('Введите email');
+          return;
+        }
+        const savedUser = localStorage.getItem(USER_KEY);
+        if (!savedUser) {
+          setAuthError('Пользователь с таким email не найден');
+          return;
+        }
+        try {
+          const parsedUser = JSON.parse(savedUser);
+          if (parsedUser.email !== resetEmail.trim()) {
+            setAuthError('Email не привязан к аккаунту');
+            return;
+          }
+          // Simulate sending code
+          const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+          localStorage.setItem('resetCode', code);
+          setAuthSuccess(`Код восстановления: ${code} (в реальном приложении отправлен на email)`);
+          setResetStep(2);
+        } catch (e) {
+          setAuthError('Ошибка восстановления');
+        }
+      };
+
+      const handleVerifyCode = () => {
+        setAuthError('');
+        const savedCode = localStorage.getItem('resetCode');
+        if (resetCode.trim().toUpperCase() !== savedCode) {
+          setAuthError('Неверный код подтверждения');
+          return;
+        }
+        setResetStep(3);
+        setAuthSuccess('');
+      };
+
+      const handleResetPassword = () => {
+        setAuthError('');
+        if (!newResetPassword || newResetPassword.length < 4) {
+          setAuthError('Пароль должен быть минимум 4 символа');
+          return;
+        }
+        const savedUser = localStorage.getItem(USER_KEY);
+        if (savedUser) {
+          const parsedUser = JSON.parse(savedUser);
+          parsedUser.password = newResetPassword;
+          localStorage.setItem(USER_KEY, JSON.stringify(parsedUser));
+          setAuthSuccess('Пароль успешно изменен! Войдите с новым паролем.');
+          setTimeout(() => {
+            setShowForgotPassword(false);
+            setResetStep(1);
+            setResetEmail('');
+            setResetCode('');
+            setNewResetPassword('');
+            setAuthSuccess('');
+          }, 2000);
+        }
+      };
+
+      const handleChangePassword = () => {
+        setPasswordError('');
+        setPasswordSuccess('');
+        
+        if (!currentPassword || !newPassword || !confirmPassword) {
+          setPasswordError('Заполните все поля');
+          return;
+        }
+        if (currentPassword !== user.password) {
+          setPasswordError('Текущий пароль неверный');
+          return;
+        }
+        if (newPassword !== confirmPassword) {
+          setPasswordError('Новые пароли не совпадают');
+          return;
+        }
+        if (newPassword.length < 4) {
+          setPasswordError('Пароль должен быть минимум 4 символа');
+          return;
+        }
+        
+        const updatedUser = { ...user, password: newPassword };
+        localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        setPasswordSuccess('Пароль успешно изменен!');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      };
+
+      const handleUpdateEmail = () => {
+        const updatedUser = { ...user, email: emailInput.trim() || null };
+        localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      };
+
+      const handleLogout = () => {
+        setIsAuthenticated(false);
+        setUser(null);
+        setPurchases([]);
+        setSales([]);
+        setBranches([]);
+        setCurrentBranchId('');
+        setLoaded(false);
+        setSidebarOpen(false);
+      };
+
+      const handlePhotoUpload = (e, setPhoto) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+          alert('Фото слишком большое. Максимальный размер 5MB');
+          return;
+        }
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+          const maxWidth = 400, maxHeight = 400;
+          let width = img.width, height = img.height;
+          if (width > height) {
+            if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
+          } else {
+            if (height > maxHeight) { width = Math.round((width * maxHeight) / height); height = maxHeight; }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+          const base64 = canvas.toDataURL('image/jpeg', 0.8);
+          setPhoto(base64);
+          URL.revokeObjectURL(url);
+        };
+        img.src = url;
+      };
+
+      const createBranch = () => {
+        if (!newBranchName.trim()) return;
+        const newBranch = { id: Date.now().toString(), name: newBranchName.trim(), createdAt: new Date().toISOString() };
+        setBranches([...branches, newBranch]);
+        setCurrentBranchId(newBranch.id);
+        setNewBranchName('');
+        setShowNewBranchForm(false);
+      };
+
+      const deleteBranch = (branchId) => {
+        if (branches.length <= 1) {
+          alert('Нельзя удалить последнюю ветку');
+          return;
+        }
+        if (confirm('Удалить ветку? Все закупки и продажи в этой ветке будут удалены.')) {
+          setBranches(branches.filter(b => b.id !== branchId));
+          setPurchases(purchases.filter(p => p.branchId !== branchId));
+          setSales(sales.filter(s => s.branchId !== branchId));
+          if (currentBranchId === branchId) {
+            const remaining = branches.filter(b => b.id !== branchId);
+            setCurrentBranchId(remaining[0]?.id || '');
+          }
+        }
+      };
+
+      const addPurchase = () => {
+        if (!purchaseName || !purchaseQty || !purchasePrice || !currentBranchId) return;
+        const qty = Number(purchaseQty);
+        const newPurchase = {
+          id: Date.now().toString(),
+          productName: purchaseName.trim(),
+          quantity: qty,
+          remainingQty: qty,
+          price: Number(purchasePrice),
+          total: qty * Number(purchasePrice),
+          date: purchaseDate,
+          branchId: currentBranchId,
+          photo: purchasePhoto || undefined,
+          notes: purchaseNotes.trim() || undefined,
+        };
+        setPurchases([newPurchase, ...purchases]);
+        setPurchaseName('');
+        setPurchaseQty('1');
+        setPurchasePrice('');
+        setPurchasePhoto('');
+        setPurchaseNotes('');
+      };
+
+      const addSale = () => {
+        if (!saleProduct || !saleQty || !salePurchasePrice || !salePrice || !currentBranchId) return;
+        const qty = Number(saleQty);
+        const sPrice = Number(salePrice);
+        const productName = saleProduct;
+        
+        const relevantPurchases = purchases.filter(p => 
+          p.branchId === currentBranchId && 
+          p.productName === productName && 
+          p.remainingQty > 0
+        ).sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        const totalRemaining = relevantPurchases.reduce((sum, p) => sum + p.remainingQty, 0);
+        
+        if (totalRemaining < qty) {
+          alert(`Недостаточно товара! Осталось: ${totalRemaining} шт.`);
+          return;
+        }
+        
+        let remainingToDeduct = qty;
+        const updatedPurchases = purchases.map(p => {
+          if (remainingToDeduct <= 0) return p;
+          if (p.branchId !== currentBranchId || p.productName !== productName || p.remainingQty <= 0) return p;
+          const deductQty = Math.min(p.remainingQty, remainingToDeduct);
+          remainingToDeduct -= deductQty;
+          return { ...p, remainingQty: p.remainingQty - deductQty };
+        });
+        
+        if (remainingToDeduct > 0) {
+          alert('Недостаточно товара для списания');
+          return;
+        }
+        
+        const firstPurchase = relevantPurchases[0];
+        const purchasePrice = firstPurchase?.price || 0;
+        
+        const newSale = {
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+          productName: productName,
+          quantity: qty,
+          purchasePrice: purchasePrice,
+          salePrice: sPrice,
+          totalCost: qty * purchasePrice,
+          totalRevenue: qty * sPrice,
+          profit: qty * (sPrice - purchasePrice),
+          date: saleDate,
+          branchId: currentBranchId,
+          purchaseId: firstPurchase?.id || '',
+          photo: firstPurchase?.photo,
+          notes: saleNotes.trim() || undefined,
+        };
+        
+        setPurchases(updatedPurchases);
+        setSales([newSale, ...sales]);
+        setSaleProduct('');
+        setSaleQty('1');
+        setSalePurchasePrice('');
+        setSalePrice('');
+        setSaleNotes('');
+      };
+
+      const openQuickSale = (productName) => {
+        const relevantPurchases = purchases.filter(p => 
+          p.branchId === currentBranchId && 
+          p.productName === productName && 
+          p.remainingQty > 0
+        );
+        
+        const totalRemaining = relevantPurchases.reduce((sum, p) => sum + p.remainingQty, 0);
+        
+        if (totalRemaining <= 0) {
+          alert('Товар закончился! Нет остатков для продажи.');
+          return;
+        }
+        
+        const firstPurchase = relevantPurchases[0];
+        setQuickSaleProduct(productName);
+        setQuickSalePhoto(firstPurchase?.photo || '');
+        setQuickSalePurchasePrice(firstPurchase?.price.toString() || '0');
+        setSalePrice('');
+        setSaleQty('1');
+        setSaleNotes('');
+        setSaleDate(new Date().toISOString().split('T')[0]);
+        setShowQuickSale(true);
+      };
+
+      const addQuickSale = () => {
+        if (!quickSaleProduct || !saleQty || !quickSalePurchasePrice || !salePrice) return;
+        const qty = Number(saleQty);
+        const sPrice = Number(salePrice);
+        const productName = quickSaleProduct;
+        const photo = quickSalePhoto;
+        const notes = saleNotes.trim() || undefined;
+        const date = saleDate;
+        const branchId = currentBranchId;
+        
+        const relevantPurchases = purchases.filter(p => 
+          p.branchId === branchId && 
+          p.productName === productName && 
+          p.remainingQty > 0
+        ).sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        let remainingToDeduct = qty;
+        const updatedPurchases = purchases.map(p => {
+          if (remainingToDeduct <= 0) return p;
+          if (p.branchId !== branchId || p.productName !== productName || p.remainingQty <= 0) return p;
+          const deductQty = Math.min(p.remainingQty, remainingToDeduct);
+          remainingToDeduct -= deductQty;
+          return { ...p, remainingQty: p.remainingQty - deductQty };
+        });
+        
+        if (remainingToDeduct > 0) {
+          alert('Недостаточно товара для списания');
+          return;
+        }
+        
+        const firstPurchase = relevantPurchases[0];
+        const purchasePrice = firstPurchase?.price || Number(quickSalePurchasePrice);
+        
+        const newSale = {
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+          productName: productName,
+          quantity: qty,
+          purchasePrice: purchasePrice,
+          salePrice: sPrice,
+          totalCost: qty * purchasePrice,
+          totalRevenue: qty * sPrice,
+          profit: qty * (sPrice - purchasePrice),
+          date: date,
+          branchId: branchId,
+          purchaseId: firstPurchase?.id || '',
+          photo: photo,
+          notes: notes,
+        };
+        
+        setPurchases(updatedPurchases);
+        setSales([newSale, ...sales]);
+        setShowQuickSale(false);
+        setQuickSaleProduct('');
+        setQuickSalePhoto('');
+        setQuickSalePurchasePrice('');
+        setSalePrice('');
+        setSaleQty('1');
+        setSaleNotes('');
+      };
+
+      const closeQuickSale = () => {
+        setShowQuickSale(false);
+        setQuickSaleProduct('');
+        setQuickSalePhoto('');
+        setQuickSalePurchasePrice('');
+        setSalePrice('');
+        setSaleQty('1');
+        setSaleNotes('');
+      };
+
+      const deletePurchase = (id) => {
+        if (confirm('Удалить эту закупку?')) {
+          setPurchases(purchases.filter(p => p.id !== id));
+        }
+      };
+
+      const deleteSale = (id) => {
+        if (confirm('Удалить эту продажу?')) {
+          setSales(sales.filter(s => s.id !== id));
+        }
+      };
+
+      const startEditPurchaseNotes = (purchase) => {
+        setEditingPurchaseId(purchase.id);
+        setEditNotes(purchase.notes || '');
+      };
+
+      const savePurchaseNotes = (id) => {
+        setPurchases(purchases.map(p => p.id === id ? { ...p, notes: editNotes.trim() || undefined } : p));
+        setEditingPurchaseId('');
+        setEditNotes('');
+      };
+
+      const startEditSaleNotes = (sale) => {
+        setEditingSaleId(sale.id);
+        setEditNotes(sale.notes || '');
+      };
+
+      const saveSaleNotes = (id) => {
+        setSales(sales.map(s => s.id === id ? { ...s, notes: editNotes.trim() || undefined } : s));
+        setEditingSaleId('');
+        setEditNotes('');
+      };
+
+      const handleAddReview = () => {
+        if (newReviewRating === 0) {
+          alert('Выберите рейтинг');
+          return;
+        }
+        if (!newReviewText.trim()) {
+          alert('Напишите отзыв');
+          return;
+        }
+        const review = {
+          id: Date.now(),
+          name: user?.name || 'Аноним',
+          rating: newReviewRating,
+          text: newReviewText.trim(),
+          date: new Date().toISOString().split('T')[0]
+        };
+        setReviews([review, ...reviews]);
+        setNewReviewRating(0);
+        setNewReviewText('');
+        setShowReviewForm(false);
+      };
+
+      const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(amount);
+      };
+
+      const getMonthlySummary = () => {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        
+        const monthlyPurchases = purchases.filter(p => {
+          const d = new Date(p.date);
+          return d.getMonth() === currentMonth && d.getFullYear() === currentYear && p.branchId === currentBranchId;
+        });
+        
+        const monthlySales = sales.filter(s => {
+          const d = new Date(s.date);
+          return d.getMonth() === currentMonth && d.getFullYear() === currentYear && s.branchId === currentBranchId;
+        });
+        
+        const productSummary = {};
+        
+        monthlyPurchases.forEach(p => {
+          if (!productSummary[p.productName]) {
+            productSummary[p.productName] = { purchased: 0, sold: 0, purchaseAmount: 0, saleAmount: 0, profit: 0 };
+          }
+          productSummary[p.productName].purchased += p.quantity;
+          productSummary[p.productName].purchaseAmount += p.total;
+        });
+        
+        monthlySales.forEach(s => {
+          if (!productSummary[s.productName]) {
+            productSummary[s.productName] = { purchased: 0, sold: 0, purchaseAmount: 0, saleAmount: 0, profit: 0 };
+          }
+          productSummary[s.productName].sold += s.quantity;
+          productSummary[s.productName].saleAmount += s.totalRevenue;
+          productSummary[s.productName].profit += s.profit;
+        });
+        
+        return { monthlyPurchases, monthlySales, productSummary };
+      };
+
+      const getAvailableProducts = () => {
+        const productMap = {};
+        purchases.filter(p => p.branchId === currentBranchId).forEach(p => {
+          if (!productMap[p.productName]) {
+            productMap[p.productName] = { name: p.productName, photo: p.photo, remaining: 0 };
+          }
+          productMap[p.productName].remaining += p.remainingQty;
+        });
+        return Object.values(productMap).filter(p => p.remaining > 0);
+      };
+
+      // Landing Page
+      if (showLanding && !isAuthenticated) {
+        return (
+          <div className="landing-page">
+            <div className="landing-hero">
+              <h1>ProfitTrack</h1>
+              <p>Умный учет закупок и продаж для вашего бизнеса. Отслеживайте прибыль, управляйте запасами и анализируйте продажи в одном месте.</p>
+              <div>
+                <button className="landing-btn" onClick={() => setShowLanding(false)}>Начать бесплатно</button>
+                <button className="landing-btn landing-btn-outline" onClick={() => { setShowLanding(false); setAuthMode('login'); }}>Войти</button>
+              </div>
+              <div className="landing-stats">
+                <div className="landing-stat">
+                  <div className="landing-stat-value">15,000+</div>
+                  <div className="landing-stat-label">активных пользователей</div>
+                </div>
+                <div className="landing-stat">
+                  <div className="landing-stat-value">500+</div>
+                  <div className="landing-stat-label">положительных отзывов</div>
+                </div>
+                <div className="landing-stat">
+                  <div className="landing-stat-value">€2M+</div>
+                  <div className="landing-stat-label">отслежено продаж</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="landing-section">
+              <h2>Возможности приложения</h2>
+              <div className="features-grid">
+                <div className="feature-card">
+                  <div className="feature-icon">📊</div>
+                  <h3>Автоматический расчет прибыли</h3>
+                  <p>Система автоматически считает вашу прибыль по каждой продаже и показывает общую статистику</p>
+                </div>
+                <div className="feature-card">
+                  <div className="feature-icon">📸</div>
+                  <h3>Фото товаров</h3>
+                  <p>Добавляйте фотографии к закупкам - они автоматически подгрузятся при продаже</p>
+                </div>
+                <div className="feature-card">
+                  <div className="feature-icon">📝</div>
+                  <h3>Заметки и описания</h3>
+                  <p>Ведите заметки к каждой сделке: контакты, условия, место продажи</p>
+                </div>
+                <div className="feature-card">
+                  <div className="feature-icon">🏷️</div>
+                  <h3>Категории товаров</h3>
+                  <p>Создавайте отдельные ветки для разных категорий товаров</p>
+                </div>
+                <div className="feature-card">
+                  <div className="feature-icon">📦</div>
+                  <h3>Учет остатков</h3>
+                  <p>Отслеживайте оставшееся количество товара после каждой продажи</p>
+                </div>
+                <div className="feature-card">
+                  <div className="feature-icon">📅</div>
+                  <h3>Месячная сводка</h3>
+                  <p>Получайте детальную статистику по каждому товару за месяц</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="landing-section" style={{ background: 'var(--bg-secondary)' }}>
+              <h2>Как это работает</h2>
+              <div className="screenshots-grid">
+                <div className="screenshot-card">
+                  <div className="screenshot-img">📥</div>
+                  <div className="screenshot-content">
+                    <h3>1. Добавьте закупку</h3>
+                    <p>Введите название товара, количество и цену закупки. Можно добавить фото и заметки.</p>
+                  </div>
+                </div>
+                <div className="screenshot-card">
+                  <div className="screenshot-img">📤</div>
+                  <div className="screenshot-content">
+                    <h3>2. Отметьте продажу</h3>
+                    <p>Выберите товар, укажите количество и цену продажи. Фото подгрузится автоматически.</p>
+                  </div>
+                </div>
+                <div className="screenshot-card">
+                  <div className="screenshot-img">💰</div>
+                  <div className="screenshot-content">
+                    <h3>3. Смотрите прибыль</h3>
+                    <p>Приложение автоматически считает прибыль и показывает статистику по всем сделкам.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="landing-section reviews-section">
+              <h2>Отзывы пользователей</h2>
+              <div className="reviews-grid">
+                {reviews.slice(0, 6).map(review => (
+                  <div key={review.id} className="review-card">
+                    <div className="review-header">
+                      <div className="review-avatar">{review.name.charAt(0)}</div>
+                      <div className="review-info">
+                        <h4>{review.name}</h4>
+                        <div className="review-stars">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</div>
+                      </div>
+                    </div>
+                    <p className="review-text">{review.text}</p>
+                  </div>
+                ))}
+              </div>
+              
+              {isAuthenticated && (
+                <div className="review-form">
+                  <h3>Оставить отзыв</h3>
+                  <div className="star-rating">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <button key={star} className={`star-btn ${star <= newReviewRating ? 'active' : ''}`} onClick={() => setNewReviewRating(star)}>★</button>
+                    ))}
+                  </div>
+                  <div className="form-group">
+                    <textarea placeholder="Ваш отзыв..." value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)} rows={3} />
+                  </div>
+                  <button className="btn btn-primary" onClick={handleAddReview}>Отправить отзыв</button>
+                </div>
+              )}
+              
+              {!isAuthenticated && (
+                <div style={{ textAlign: 'center', marginTop: '32px' }}>
+                  <button className="landing-btn" onClick={() => setShowLanding(false)}>Войдите, чтобы оставить отзыв</button>
+                </div>
+              )}
+            </div>
+
+            <div className="landing-footer">
+              <p>© 2024 ProfitTrack. Все данные хранятся локально в вашем браузере.</p>
+            </div>
+          </div>
+        );
+      }
+
+      // Auth Screen
+      if (!isAuthenticated) {
+        return (
+          <div className="auth-container">
+            <div className="auth-card">
+              <div className="auth-header">
+                <h1>ProfitTrack</h1>
+                <p>Учет закупок и продаж с автоматическим расчетом прибыли</p>
+              </div>
+              <div className="auth-form">
+                {showForgotPassword ? (
+                  <>
+                    <h2 style={{ marginBottom: '16px', color: 'var(--text-primary)' }}>Восстановление пароля</h2>
+                    {resetStep === 1 && (
+                      <>
+                        <div className="form-group">
+                          <label>Email <span className="required">*</span></label>
+                          <input type="email" placeholder="your@email.com" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} />
+                        </div>
+                        {authError && <div className="auth-error">{authError}</div>}
+                        {authSuccess && <div className="auth-success">{authSuccess}</div>}
+                        <button className="auth-btn" onClick={handleForgotPassword}>Отправить код</button>
+                      </>
+                    )}
+                    {resetStep === 2 && (
+                      <>
+                        <div className="info-box">Код отправлен на {resetEmail}</div>
+                        {authSuccess && <div className="auth-success">{authSuccess}</div>}
+                        <div className="form-group">
+                          <label>Код подтверждения</label>
+                          <input type="text" placeholder="Введите код" value={resetCode} onChange={(e) => setResetCode(e.target.value)} />
+                        </div>
+                        {authError && <div className="auth-error">{authError}</div>}
+                        <button className="auth-btn" onClick={handleVerifyCode}>Подтвердить</button>
+                      </>
+                    )}
+                    {resetStep === 3 && (
+                      <>
+                        <div className="form-group">
+                          <label>Новый пароль</label>
+                          <input type="password" placeholder="Минимум 4 символа" value={newResetPassword} onChange={(e) => setNewResetPassword(e.target.value)} />
+                        </div>
+                        {authError && <div className="auth-error">{authError}</div>}
+                        {authSuccess && <div className="auth-success">{authSuccess}</div>}
+                        <button className="auth-btn" onClick={handleResetPassword}>Сменить пароль</button>
+                      </>
+                    )}
+                    <div className="back-to-login">
+                      <button onClick={() => { setShowForgotPassword(false); setResetStep(1); setAuthError(''); setAuthSuccess(''); }}>← Назад к входу</button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="auth-tabs">
+                      <button className={`auth-tab ${authMode === 'login' ? 'active' : ''}`} onClick={() => setAuthMode('login')}>Вход</button>
+                      <button className={`auth-tab ${authMode === 'register' ? 'active' : ''}`} onClick={() => setAuthMode('register')}>Регистрация</button>
+                    </div>
+                    
+                    {authMode === 'register' && (
+                      <div className="form-group">
+                        <label>Ваше имя</label>
+                        <input type="text" placeholder="Иван" value={userName} onChange={(e) => setUserName(e.target.value)} />
+                      </div>
+                    )}
+                    
+                    <div className="form-group">
+                      <label>Логин</label>
+                      <input type="text" placeholder="ivan123" value={loginInput} onChange={(e) => setLoginInput(e.target.value)} />
+                    </div>
+                    
+                    {authMode === 'register' && (
+                      <div className="form-group">
+                        <label>Email <span className="required">*</span></label>
+                        <input type="email" placeholder="your@email.com" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} />
+                        <small style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>Обязательно для восстановления пароля</small>
+                      </div>
+                    )}
+                    
+                    <div className="form-group">
+                      <label>Пароль</label>
+                      <input type="password" placeholder="••••••" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} />
+                    </div>
+                    
+                    {authError && <div className="auth-error">{authError}</div>}
+                    
+                    <button className="auth-btn" onClick={authMode === 'login' ? handleLogin : handleRegister}>
+                      {authMode === 'login' ? 'Войти' : 'Зарегистрироваться'}
+                    </button>
+                    
+                    {authMode === 'login' && (
+                      <div className="forgot-password">
+                        <button onClick={() => { setShowForgotPassword(true); setAuthError(''); }}>Забыли пароль?</button>
+                      </div>
+                    )}
+                    
+                    <div className="back-to-login">
+                      <button onClick={() => setShowLanding(true)}>← На главную</button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      if (!loaded) {
+        return (
+          <div className="loading">
+            <div>
+              <div className="loading-icon">📊</div>
+              <p>Загрузка...</p>
+            </div>
+          </div>
+        );
+      }
+
+      const availableProducts = getAvailableProducts();
+      const { monthlyPurchases, monthlySales, productSummary } = getMonthlySummary();
+
+      const totalPurchases = purchases.filter(p => p.branchId === currentBranchId).reduce((sum, p) => sum + p.total, 0);
+      const branchSales = sales.filter(s => s.branchId === currentBranchId);
+      const totalSales = branchSales.reduce((sum, s) => sum + s.totalRevenue, 0);
+      const totalProfit = branchSales.reduce((sum, s) => sum + s.profit, 0);
+
+      return (
+        <div>
+          {/* Header */}
+          <header className="app-header">
+            <div className="app-header-content">
+              <div className="header-left">
+                <button className="menu-btn" onClick={() => setSidebarOpen(true)}>☰</button>
+                <div className="logo">
+                  <span className="logo-icon">📊</span>
+                  <div className="logo-text">
+                    <h1>ProfitTrack</h1>
+                    <p>Учет закупок и продаж</p>
+                  </div>
+                </div>
+              </div>
+              <div className="user-info">
+                <span style={{ color: 'var(--text-secondary)' }}>👤 {user?.name}</span>
+                <button className="logout-btn" onClick={handleLogout}>Выйти</button>
+              </div>
+            </div>
+          </header>
+
+          {/* Sidebar */}
+          {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+          <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+            <div className="sidebar-header">
+              <h2>Меню</h2>
+              <button className="close-sidebar" onClick={() => setSidebarOpen(false)}>✕</button>
+            </div>
+            <div className="sidebar-menu">
+              <button className="sidebar-item" onClick={() => { setShowProfile(true); setSidebarOpen(false); }}>👤 Профиль</button>
+              <button className="sidebar-item" onClick={() => { setActiveTab('add'); setSidebarOpen(false); }}>➕ Добавить</button>
+              <button className="sidebar-item" onClick={() => { setActiveTab('history'); setSidebarOpen(false); }}>📋 История</button>
+              <button className="sidebar-item" onClick={() => { setActiveTab('summary'); setSidebarOpen(false); }}>📊 Сводка</button>
+              <div className="sidebar-divider" />
+              <div className="theme-toggle">
+                <span>🌙 Темная тема</span>
+                <div className={`toggle-switch ${theme === 'dark' ? 'active' : ''}`} onClick={toggleTheme} />
+              </div>
+              <div className="sidebar-divider" />
+              <button className="sidebar-item" onClick={handleLogout}>🚪 Выйти</button>
+            </div>
+          </div>
+
+          {/* Profile Modal */}
+          {showProfile && (
+            <div className="modal-overlay" onClick={() => setShowProfile(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2>Профиль</h2>
+                  <button className="close-modal" onClick={() => setShowProfile(false)}>✕</button>
+                </div>
+                <div className="profile-section">
+                  <div className="profile-info">
+                    <div className="profile-avatar">{user?.name?.charAt(0) || '?'}</div>
+                    <div className="profile-details">
+                      <h4>{user?.name}</h4>
+                      <p>@{user?.login}</p>
+                      {user?.email && <p style={{ fontSize: '12px', color: '#6b7280' }}>📧 {user.email}</p>}
+                    </div>
+                  </div>
+                </div>
+                <div className="profile-section">
+                  <h3>Email</h3>
+                  <div className="form-group">
+                    <input type="email" placeholder="your@email.com" defaultValue={user?.email || ''} onChange={(e) => setEmailInput(e.target.value)} />
+                  </div>
+                  <button className="btn btn-secondary" onClick={handleUpdateEmail}>Обновить email</button>
+                </div>
+                <div className="profile-section">
+                  <h3>Безопасность</h3>
+                  <button className="btn btn-primary" onClick={() => { setShowChangePassword(true); setShowProfile(false); }}>Сменить пароль</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Change Password Modal */}
+          {showChangePassword && (
+            <div className="modal-overlay" onClick={() => setShowChangePassword(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2>Сменить пароль</h2>
+                  <button className="close-modal" onClick={() => setShowChangePassword(false)}>✕</button>
+                </div>
+                {passwordError && <div className="auth-error">{passwordError}</div>}
+                {passwordSuccess && <div className="success-message">{passwordSuccess}</div>}
+                <div className="form-group">
+                  <label>Текущий пароль</label>
+                  <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label>Новый пароль</label>
+                  <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label>Подтвердите новый пароль</label>
+                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                </div>
+                <button className="auth-btn" onClick={handleChangePassword}>Сменить пароль</button>
+              </div>
+            </div>
+          )}
+
+          {/* Main Content */}
+          <main className="main-content">
+            {/* Stats */}
+            <div className="stats-grid">
+              <div className="stat-card purchases">
+                <div>
+                  <div className="stat-label">Всего закупок</div>
+                  <div className="stat-value purchases">{formatCurrency(totalPurchases)}</div>
+                </div>
+                <div className="stat-icon purchases">📦</div>
+              </div>
+              <div className="stat-card sales">
+                <div>
+                  <div className="stat-label">Всего продаж</div>
+                  <div className="stat-value sales">{formatCurrency(totalSales)}</div>
+                </div>
+                <div className="stat-icon sales">🛒</div>
+              </div>
+              <div className="stat-card revenue">
+                <div>
+                  <div className="stat-label">Выручка</div>
+                  <div className="stat-value revenue">{formatCurrency(totalSales)}</div>
+                </div>
+                <div className="stat-icon revenue">💰</div>
+              </div>
+              <div className={`stat-card profit ${totalProfit < 0 ? 'negative' : ''}`}>
+                <div>
+                  <div className="stat-label">Прибыль</div>
+                  <div className={`stat-value profit ${totalProfit < 0 ? 'negative' : ''}`}>{formatCurrency(totalProfit)}</div>
+                </div>
+                <div className={`stat-icon profit ${totalProfit < 0 ? 'negative' : ''}`}>📈</div>
+              </div>
+            </div>
+
+            {/* Branch Selector */}
+            <div className="branch-selector">
+              <div className="branch-controls">
+                <select className="branch-select" value={currentBranchId} onChange={(e) => setCurrentBranchId(e.target.value)}>
+                  {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select>
+                <button className="btn-small" style={{ background: '#10b981', color: 'white' }} onClick={() => setShowNewBranchForm(!showNewBranchForm)}>+ Новая ветка</button>
+                {branches.length > 1 && (
+                  <button className="btn-small" style={{ background: '#dc2626', color: 'white' }} onClick={() => deleteBranch(currentBranchId)}>Удалить</button>
+                )}
+              </div>
+              {showNewBranchForm && (
+                <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
+                  <input type="text" placeholder="Название ветки" value={newBranchName} onChange={(e) => setNewBranchName(e.target.value)} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }} />
+                  <button className="btn-small" style={{ background: '#10b981', color: 'white' }} onClick={createBranch}>Создать</button>
+                  <button className="btn-small" style={{ background: '#6b7280', color: 'white' }} onClick={() => setShowNewBranchForm(false)}>Отмена</button>
+                </div>
+              )}
+            </div>
+
+            {/* Tabs */}
+            <div className="tabs">
+              <button className={`tab ${activeTab === 'add' ? 'active' : ''}`} onClick={() => setActiveTab('add')}>➕ Добавить</button>
+              <button className={`tab ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>📋 История</button>
+              <button className={`tab ${activeTab === 'summary' ? 'active' : ''}`} onClick={() => setActiveTab('summary')}>📊 Сводка</button>
+            </div>
+
+            {/* Tab Content */}
+            <div className="tab-content">
+              {activeTab === 'add' && (
+                <div className="form-grid">
+                  {/* Purchase Form */}
+                  <div className="form-card purchase">
+                    <h3>📦 Новая закупка</h3>
+                    <div className="form-group">
+                      <label>Название товара</label>
+                      <input type="text" placeholder="Например: iPhone 15" value={purchaseName} onChange={(e) => setPurchaseName(e.target.value)} />
+                    </div>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Количество</label>
+                        <input type="number" min="1" placeholder="1" value={purchaseQty} onChange={(e) => setPurchaseQty(e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label>Цена за шт (€)</label>
+                        <input type="number" min="0" step="0.01" placeholder="0.00" value={purchasePrice} onChange={(e) => setPurchasePrice(e.target.value)} />
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label>Дата</label>
+                      <input type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                      <label>Фото товара</label>
+                      <input type="file" accept="image/*" onChange={(e) => handlePhotoUpload(e, setPurchasePhoto)} />
+                      {purchasePhoto && <img src={purchasePhoto} alt="Preview" onClick={() => { setPreviewPhoto(purchasePhoto); setShowPreview(true); }} className="product-img" style={{ width: '50px', height: '50px', marginTop: '8px' }} />}
+                    </div>
+                    <div className="form-group">
+                      <label>Заметки</label>
+                      <textarea placeholder="Описание, поставщик, условия..." value={purchaseNotes} onChange={(e) => setPurchaseNotes(e.target.value)} rows={2} />
+                    </div>
+                    {purchaseQty && purchasePrice && (
+                      <div className="summary-box">
+                        <p style={{ margin: 0, fontSize: '14px' }}>Итого: <strong>{formatCurrency(Number(purchaseQty) * Number(purchasePrice))}</strong></p>
+                      </div>
+                    )}
+                    <button className="btn btn-primary" style={{ marginTop: '12px', width: '100%' }} onClick={addPurchase} disabled={!purchaseName || !purchaseQty || !purchasePrice}>Добавить закупку</button>
+                  </div>
+
+                  {/* Sale Form */}
+                  <div className="form-card sale">
+                    <h3>🛒 Новая продажа</h3>
+                    <div className="form-group">
+                      <label>Товар</label>
+                      <select value={saleProduct} onChange={(e) => {
+                        const selected = availableProducts.find(p => p.name === e.target.value);
+                        setSaleProduct(e.target.value);
+                        if (selected) {
+                          const relevantPurchases = purchases.filter(p => 
+                            p.branchId === currentBranchId && 
+                            p.productName === selected.name && 
+                            p.remainingQty > 0
+                          );
+                          const firstPurchase = relevantPurchases[0];
+                          setSalePurchasePrice(firstPurchase?.price?.toString() || '0');
+                        }
+                      }}>
+                        <option value="">Выберите товар</option>
+                        {availableProducts.map(p => (
+                          <option key={p.name} value={p.name}>{p.name} (осталось: {p.remaining})</option>
+                        ))}
+                      </select>
+                    </div>
+                    {saleProduct && availableProducts.find(p => p.name === saleProduct)?.photo && (
+                      <div className="form-group">
+                        <img src={availableProducts.find(p => p.name === saleProduct)?.photo} alt="Product" onClick={() => { setPreviewPhoto(availableProducts.find(p => p.name === saleProduct)?.photo); setShowPreview(true); }} className="product-img" style={{ width: '50px', height: '50px' }} />
+                      </div>
+                    )}
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Количество</label>
+                        <input type="number" min="1" placeholder="1" value={saleQty} onChange={(e) => setSaleQty(e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label>Цена продажи (€)</label>
+                        <input type="number" min="0" step="0.01" placeholder="0.00" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} />
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label>Дата</label>
+                      <input type="date" value={saleDate} onChange={(e) => setSaleDate(e.target.value)} />
+                    </div>
+                    <div className="form-group">
+                      <label>Заметки</label>
+                      <textarea placeholder="Где продал, контакты покупателя..." value={saleNotes} onChange={(e) => setSaleNotes(e.target.value)} rows={2} />
+                    </div>
+                    {saleQty && salePrice && salePurchasePrice && (
+                      <div className={`summary-box ${Number(saleQty) * (Number(salePrice) - Number(salePurchasePrice)) < 0 ? 'negative' : ''}`}>
+                        <p style={{ margin: 0, fontSize: '14px' }}>
+                          Прибыль: <strong style={{ color: Number(saleQty) * (Number(salePrice) - Number(salePurchasePrice)) >= 0 ? '#059669' : '#dc2626' }}>
+                            {Number(saleQty) * (Number(salePrice) - Number(salePurchasePrice)) >= 0 ? '+' : ''}{formatCurrency(Number(saleQty) * (Number(salePrice) - Number(salePurchasePrice)))}
+                          </strong>
+                        </p>
+                      </div>
+                    )}
+                    <button className="btn btn-secondary" style={{ marginTop: '12px', width: '100%' }} onClick={addSale} disabled={!saleProduct || !saleQty || !salePrice}>Добавить продажу</button>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'history' && (
+                <div>
+                  <h3 style={{ marginBottom: '16px', color: 'var(--text-primary)' }}>📦 История закупок</h3>
+                  <div className="table-container">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Фото</th>
+                          <th>Товар</th>
+                          <th>Кол-во</th>
+                          <th>Осталось</th>
+                          <th>Цена</th>
+                          <th>Сумма</th>
+                          <th>Дата</th>
+                          <th>Заметки</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {purchases.filter(p => p.branchId === currentBranchId).map(p => (
+                          <tr key={p.id}>
+                            <td>{p.photo ? <img src={p.photo} alt={p.productName} onClick={() => { setPreviewPhoto(p.photo); setShowPreview(true); }} className="product-img" /> : <div className="product-placeholder">📦</div>}</td>
+                            <td>{p.productName}</td>
+                            <td>{p.quantity}</td>
+                            <td><span className={`badge ${p.remainingQty > 0 ? 'badge-info' : 'badge-warning'}`}>{p.remainingQty}</span></td>
+                            <td>{formatCurrency(p.price)}</td>
+                            <td>{formatCurrency(p.total)}</td>
+                            <td>{new Date(p.date).toLocaleDateString('ru-RU')}</td>
+                            <td>
+                              {editingPurchaseId === p.id ? (
+                                <div className="notes-input">
+                                  <input type="text" value={editNotes} onChange={(e) => setEditNotes(e.target.value)} style={{ width: '100%', marginBottom: '4px' }} />
+                                  <button className="edit-btn" onClick={() => savePurchaseNotes(p.id)}>Сохранить</button>
+                                </div>
+                              ) : (
+                                <div>
+                                  {p.notes && <div className="notes-box">{p.notes}</div>}
+                                  <button className="edit-btn" onClick={() => startEditPurchaseNotes(p)}>{p.notes ? 'Изменить' : 'Добавить'}</button>
+                                </div>
+                              )}
+                            </td>
+                            <td>
+                              <button className="delete-btn" onClick={() => deletePurchase(p.id)}>🗑️</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <h3 style={{ margin: '32px 0 16px', color: 'var(--text-primary)' }}>🛒 История продаж</h3>
+                  <div className="table-container">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Фото</th>
+                          <th>Товар</th>
+                          <th>Кол-во</th>
+                          <th>Закупка</th>
+                          <th>Продажа</th>
+                          <th>Прибыль</th>
+                          <th>Дата</th>
+                          <th>Заметки</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sales.filter(s => s.branchId === currentBranchId).map(s => (
+                          <tr key={s.id}>
+                            <td>{s.photo ? <img src={s.photo} alt={s.productName} onClick={() => { setPreviewPhoto(s.photo); setShowPreview(true); }} className="product-img" /> : <div className="product-placeholder">🛒</div>}</td>
+                            <td>{s.productName}</td>
+                            <td>{s.quantity}</td>
+                            <td>{formatCurrency(s.purchasePrice)}</td>
+                            <td>{formatCurrency(s.salePrice)}</td>
+                            <td><span className={`badge ${s.profit >= 0 ? 'badge-success' : 'badge-danger'}`}>{s.profit >= 0 ? '+' : ''}{formatCurrency(s.profit)}</span></td>
+                            <td>{new Date(s.date).toLocaleDateString('ru-RU')}</td>
+                            <td>
+                              {editingSaleId === s.id ? (
+                                <div className="notes-input">
+                                  <input type="text" value={editNotes} onChange={(e) => setEditNotes(e.target.value)} style={{ width: '100%', marginBottom: '4px' }} />
+                                  <button className="edit-btn" onClick={() => saveSaleNotes(s.id)}>Сохранить</button>
+                                </div>
+                              ) : (
+                                <div>
+                                  {s.notes && <div className="notes-box">{s.notes}</div>}
+                                  <button className="edit-btn" onClick={() => startEditSaleNotes(s)}>{s.notes ? 'Изменить' : 'Добавить'}</button>
+                                </div>
+                              )}
+                            </td>
+                            <td><button className="delete-btn" onClick={() => deleteSale(s.id)}>🗑️</button></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'summary' && (
+                <div>
+                  <h3 style={{ marginBottom: '16px', color: 'var(--text-primary)' }}>📊 Сводка за текущий месяц</h3>
+                  
+                  <div className="stats-grid" style={{ marginBottom: '24px' }}>
+                    <div className="stat-card purchases">
+                      <div>
+                        <div className="stat-label">Закупки</div>
+                        <div className="stat-value purchases">{formatCurrency(monthlyPurchases.reduce((sum, p) => sum + p.total, 0))}</div>
+                      </div>
+                    </div>
+                    <div className="stat-card sales">
+                      <div>
+                        <div className="stat-label">Продажи</div>
+                        <div className="stat-value sales">{formatCurrency(monthlySales.reduce((sum, s) => sum + s.totalRevenue, 0))}</div>
+                      </div>
+                    </div>
+                    <div className={`stat-card profit ${monthlySales.reduce((sum, s) => sum + s.profit, 0) < 0 ? 'negative' : ''}`}>
+                      <div>
+                        <div className="stat-label">Прибыль</div>
+                        <div className={`stat-value profit ${monthlySales.reduce((sum, s) => sum + s.profit, 0) < 0 ? 'negative' : ''}`}>
+                          {formatCurrency(monthlySales.reduce((sum, s) => sum + s.profit, 0))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <h4 style={{ marginBottom: '12px', color: 'var(--text-primary)' }}>По товарам:</h4>
+                  <div className="table-container">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Товар</th>
+                          <th>Закуплено</th>
+                          <th>Продано</th>
+                          <th>Закупка (€)</th>
+                          <th>Продажа (€)</th>
+                          <th>Прибыль</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(productSummary).map(([name, data]) => (
+                          <tr key={name}>
+                            <td><strong>{name}</strong></td>
+                            <td>{data.purchased} шт</td>
+                            <td>{data.sold} шт</td>
+                            <td>{formatCurrency(data.purchaseAmount)}</td>
+                            <td>{formatCurrency(data.saleAmount)}</td>
+                            <td><span className={`badge ${data.profit >= 0 ? 'badge-success' : 'badge-danger'}`}>{data.profit >= 0 ? '+' : ''}{formatCurrency(data.profit)}</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <h4 style={{ margin: '24px 0 12px', color: 'var(--text-primary)' }}>📦 Товары в наличии:</h4>
+                  <div className="table-container">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Фото</th>
+                          <th>Товар</th>
+                          <th>Остаток</th>
+                          <th>Цена закупки</th>
+                          <th>Действие</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {availableProducts.map(p => (
+                          <tr key={p.name}>
+                            <td>{p.photo ? <img src={p.photo} alt={p.name} onClick={() => { setPreviewPhoto(p.photo); setShowPreview(true); }} className="product-img" style={{ width: '50px', height: '50px' }} /> : <div className="product-placeholder" style={{ width: '50px', height: '50px', fontSize: '24px' }}>📦</div>}</td>
+                            <td><strong>{p.name}</strong></td>
+                            <td><span className="badge badge-info">{p.remaining} шт</span></td>
+                            <td>
+                              {(() => {
+                                const relevantPurchases = purchases.filter(pr => 
+                                  pr.branchId === currentBranchId && 
+                                  pr.productName === p.name && 
+                                  pr.remainingQty > 0
+                                );
+                                const firstPurchase = relevantPurchases[0];
+                                return firstPurchase ? formatCurrency(firstPurchase.price) : '-';
+                              })()}
+                            </td>
+                            <td><button className="sell-btn" onClick={() => openQuickSale(p.name)}>Продать</button></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {availableProducts.length === 0 && (
+                    <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '24px' }}>Нет товаров в наличии</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </main>
+
+          {/* Quick Sale Modal */}
+          {showQuickSale && (
+            <div className="modal-overlay" onClick={closeQuickSale}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+                <div className="modal-header">
+                  <h2>🛒 Продать {quickSaleProduct}</h2>
+                  <button className="close-modal" onClick={closeQuickSale}>✕</button>
+                </div>
+                <div>
+                  {quickSalePhoto && <img src={quickSalePhoto} alt="Product" style={{ width: '100%', maxHeight: '200px', objectFit: 'contain', marginBottom: '16px', borderRadius: '8px' }} />}
+                  <div className="form-group">
+                    <label>Количество</label>
+                    <input type="number" min="1" placeholder="1" value={saleQty} onChange={(e) => setSaleQty(e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label>Цена продажи (€)</label>
+                    <input type="number" min="0" step="0.01" placeholder="0.00" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label>Дата</label>
+                    <input type="date" value={saleDate} onChange={(e) => setSaleDate(e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label>Заметки</label>
+                    <textarea placeholder="Где продал, контакты покупателя..." value={saleNotes} onChange={(e) => setSaleNotes(e.target.value)} rows={2} />
+                  </div>
+                  {saleQty && salePrice && (
+                    <div className={`summary-box ${Number(saleQty) * (Number(salePrice) - Number(quickSalePurchasePrice)) < 0 ? 'negative' : ''}`}>
+                      <p style={{ margin: 0, fontSize: '14px' }}>
+                        Прибыль: <strong style={{ color: Number(saleQty) * (Number(salePrice) - Number(quickSalePurchasePrice)) >= 0 ? '#059669' : '#dc2626' }}>
+                          {Number(saleQty) * (Number(salePrice) - Number(quickSalePurchasePrice)) >= 0 ? '+' : ''}{formatCurrency(Number(saleQty) * (Number(salePrice) - Number(quickSalePurchasePrice)))}
+                        </strong>
+                      </p>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                    <button className="btn btn-secondary" style={{ flex: 1 }} onClick={addQuickSale} disabled={!saleQty || !salePrice}>Продать</button>
+                    <button className="btn" style={{ background: '#6b7280', color: 'white' }} onClick={closeQuickSale}>Отмена</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Photo Preview Modal */}
+          {showPreview && (
+            <div className="preview-modal" onClick={() => setShowPreview(false)}>
+              <img src={previewPhoto} alt="Preview" onClick={(e) => e.stopPropagation()} />
+              <button className="modal-close-btn" onClick={() => setShowPreview(false)}>✕</button>
+            </div>
+          )}
+
+          <footer style={{ background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-color)', marginTop: '48px' }}>
+            <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '16px 24px', textAlign: 'center' }}>
+              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: 0 }}>Данные сохраняются автоматически в браузере</p>
+            </div>
+          </footer>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
